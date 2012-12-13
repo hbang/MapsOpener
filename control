@@ -1,0 +1,9 @@
+Package: ws.hbang.mapsopener
+Name: MapsOpener
+Depends: mobilesubstrate
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Open Google Maps links in the new App Store app
+Maintainer: HASHBANG Productions <mapsopener@hbang.ws>
+Author: HASHBANG Productions <mapsopener@hbang.ws>
+Section: Tweaks
