@@ -5,19 +5,13 @@
  * Licensed under the GPL license <http://www.gnu.org/copyleft/gpl.html>
  */
 
-%hook SpringBoard
--(void)_openURLCore:(NSURL *)url display:(id)display publicURLsOnly:(BOOL)publicOnly animating:(BOOL)animated additionalActivationFlag:(unsigned int)flags {
-	if (([url.scheme isEqualToString:@"maps"] || ([url.host hasPrefix:@"maps.google.co"] && [url.path isEqualToString:@"/maps"])) && [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
-		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:[@"comgooglemaps://search?" stringByAppendingString:[url.scheme isEqualToString:@"maps"] ? [url.absoluteString stringByReplacingOccurrencesOfString:@"maps:" withString:@""] : url.query]]];
-	} else {
-		%orig;
-	}
+#import "HBLibOpener.h"
+
+%ctor {
+	[[HBLibOpener sharedInstance] registerHandlerWithName:@"MapsOpener" block:^(NSURL *url) {
+		if (([url.scheme isEqualToString:@"maps"] || ([url.host hasPrefix:@"maps.google.co"] && [url.path isEqualToString:@"/maps"])) && [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
+			return [NSURL URLWithString:[@"comgooglemaps://search?" stringByAppendingString:[url.scheme isEqualToString:@"maps"] ? [[url.absoluteString stringByReplacingOccurrencesOfString:@"maps:address=" withString:@"maps:q="] stringByReplacingOccurrencesOfString:@"maps:" withString:@""] : url.query]];
+		}
+		return (id)nil;
+	}];
 }
--(void)_openURLCore:(NSURL *)url display:(id)display animating:(BOOL)animating sender:(id)sender additionalActivationFlags:(id)activationFlags {
-	if (([url.scheme isEqualToString:@"maps"] || ([url.host hasPrefix:@"maps.google.co"] && [url.path isEqualToString:@"/maps"])) && [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
-		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:[@"comgooglemaps://search?" stringByAppendingString:[url.scheme isEqualToString:@"maps"] ? [url.absoluteString stringByReplacingOccurrencesOfString:@"maps:" withString:@""] : url.query]]];
-	} else {
-		%orig;
-	}
-}
-%end
