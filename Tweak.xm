@@ -9,12 +9,11 @@
  */
 
 #import "HBLibOpener.h"
-#import <version.h>
 #import <MapKit/MKMapItem.h>
 
 #define PERCENT_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
 
-%group HBMOiOS6
+%group HBMOMapKit
 static NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 	if (mapItem.isCurrentLocation) {
 		return @"";
@@ -33,7 +32,7 @@ static NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 
 %hook MKMapItem
 +(NSURL *)urlForMapItems:(NSArray *)items options:(id)options {
-	if (items.count < 1) {
+	if (![[HBLibOpener sharedInstance] handlerIsEnabled:@"MapsOpener"] || items.count < 1 || ![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
 		return %orig;
 	} else if (items.count == 1) {
 		return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:HBMOMakeQuery([items objectAtIndex:0])]];
@@ -45,8 +44,8 @@ static NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 %end
 
 %ctor {
-	if (IS_IOS_OR_NEWER(iOS_6_0)) {
-		%init(HBMOiOS6);
+	if (%c(MKMapItem)) {
+		%init(HBMOMapKit);
 	}
 
 	if (![[NSBundle mainBundle].bundleIdentifier isEqualToString:@"com.apple.springboard"]) {
@@ -54,7 +53,7 @@ static NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 	}
 
 	[[HBLibOpener sharedInstance] registerHandlerWithName:@"MapsOpener" block:^(NSURL *url) {
-		if (![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"googlemaps://"]]) {
+		if (![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
 			return (id)nil;
 		} else if ([url.scheme isEqualToString:@"maps"]) {
 			return [NSURL URLWithString:[@"comgooglemaps://?" stringByAppendingString:[[url.absoluteString stringByReplacingOccurrencesOfString:@"maps:address=" withString:@"maps:q="] stringByReplacingOccurrencesOfString:@"maps:" withString:@""]]];
