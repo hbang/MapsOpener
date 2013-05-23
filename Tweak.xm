@@ -31,7 +31,7 @@ static NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 }
 
 %hook MKMapItem
-+(NSURL *)urlForMapItems:(NSArray *)items options:(id)options {
++ (NSURL *)urlForMapItems:(NSArray *)items options:(id)options {
 	if (![[HBLibOpener sharedInstance] handlerIsEnabled:@"MapsOpener"] || items.count < 1 || ![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
 		return %orig;
 	} else if (items.count == 1) {
