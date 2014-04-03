@@ -30,7 +30,7 @@
 			stringByReplacingOccurrencesOfString:@"maps:address=" withString:@"maps:q="]
 			stringByReplacingOccurrencesOfString:@"maps:" withString:@""]]];
 	} else if (([url.host hasPrefix:@"maps.google."] && [url.path isEqualToString:@"/maps"])
-		|| (([url.host hasPrefix:@"google."] || [url.host hasPrefix:@"www.google."]) && [url.pathComponents[1] isEqualToString:@"maps"] && [SupportedPaths containsObject:url.pathComponents.count > 1 ? url.pathComponents[2] : @""])) {
+		|| (([url.host hasPrefix:@"google."] || [url.host hasPrefix:@"www.google."]) && url.pathComponents.count > 2 && [url.pathComponents[1] isEqualToString:@"maps"] && [SupportedPaths containsObject:url.pathComponents[2]])) {
 		return [NSURL URLWithString:[@"comgooglemaps://?mapsurl=" stringByAppendingString:PERCENT_ENCODE(url.absoluteString)]];
 	}
 
