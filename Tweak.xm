@@ -1,45 +1,37 @@
-/**
- * MapsOpener - open Google Maps links in the new app
- *
- * By HASHBANG Productions <http://hbang.ws>
- * Licensed under the GPL license <http://www.gnu.org/copyleft/gpl.html>
- *
- * The comgooglemaps:// URL scheme is documented on Google Developers:
- * <https://developers.google.com/maps/documentation/ios/urlscheme>
- */
-
-#import "HBLibOpener.h"
+#import "Global.h"
+#import <libopener/HBLibOpener.h>
 #import <MapKit/MKMapItem.h>
+#import <MapKit/MKPlacemark.h>
 
-#define PERCENT_ENCODE(string) [(NSString *)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)(string), NULL, CFSTR(":/=,!$& '()*+;[]@#?"), kCFStringEncodingUTF8) autorelease]
+NSString *HBMOMakeQuery(MKMapItem *mapItem) {
+    if (mapItem.isCurrentLocation) {
+        return @"";
+    } else {
+        NSDictionary *info = mapItem.placemark.addressDictionary;
 
-%group HBMOMapKit
-static NSString *HBMOMakeQuery(MKMapItem *mapItem) {
-	if (mapItem.isCurrentLocation) {
-		return @"";
-	} else {
-		NSDictionary *info = mapItem.placemark.addressDictionary;
-
-		return [NSString stringWithFormat:@"%@%@%@%@%@",
-			PERCENT_ENCODE([info objectForKey:@"Street"] ? [[info objectForKey:@"Street"] stringByAppendingString:@" "] : @""),
-			PERCENT_ENCODE([info objectForKey:@"City"] ? [[info objectForKey:@"City"] stringByAppendingString:@" "] : @""),
-			PERCENT_ENCODE([info objectForKey:@"State"] ? [[info objectForKey:@"State"] stringByAppendingString:@" "] : @""),
-			PERCENT_ENCODE([info objectForKey:@"ZIP"] ? [[info objectForKey:@"ZIP"] stringByAppendingString:@" "] : @""),
-			PERCENT_ENCODE([info objectForKey:@"CountryCode"] ?: @"")
-		];
-	}
+        return [NSString stringWithFormat:@"%@%@%@%@%@",
+            PERCENT_ENCODE(info[@"Street"] ? [info[@"Street"] stringByAppendingString:@" "] : @""),
+            PERCENT_ENCODE(info[@"City"] ? [info[@"City"] stringByAppendingString:@" "] : @""),
+            PERCENT_ENCODE(info[@"State"] ? [info[@"State"] stringByAppendingString:@" "] : @""),
+            PERCENT_ENCODE(info[@"ZIP"] ? [info[@"ZIP"] stringByAppendingString:@" "] : @""),
+            PERCENT_ENCODE(info[@"CountryCode"] ?: @"")
+        ];
+    }
 }
 
+%group HBMOMapKit
 %hook MKMapItem
+
 + (NSURL *)urlForMapItems:(NSArray *)items options:(id)options {
 	if (![[HBLibOpener sharedInstance] handlerIsEnabled:@"MapsOpener"] || items.count < 1 || ![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
 		return %orig;
 	} else if (items.count == 1) {
-		return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:HBMOMakeQuery([items objectAtIndex:0])]];
+		return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:HBMOMakeQuery(items[0])]];
 	} else {
-		return [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", HBMOMakeQuery([items objectAtIndex:0]), HBMOMakeQuery([items objectAtIndex:1])]];
+		return [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", HBMOMakeQuery(items[0]), HBMOMakeQuery(items[1])]];
 	}
 }
+
 %end
 %end
 
@@ -47,20 +39,4 @@ static NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 	if (%c(MKMapItem)) {
 		%init(HBMOMapKit);
 	}
-
-	if (![[NSBundle mainBundle].bundleIdentifier isEqualToString:@"com.apple.springboard"]) {
-		return;
-	}
-
-	[[HBLibOpener sharedInstance] registerHandlerWithName:@"MapsOpener" block:^(NSURL *url) {
-		if (![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
-			return (id)nil;
-		} else if ([url.scheme isEqualToString:@"maps"]) {
-			return [NSURL URLWithString:[@"comgooglemaps://?" stringByAppendingString:[[url.absoluteString stringByReplacingOccurrencesOfString:@"maps:address=" withString:@"maps:q="] stringByReplacingOccurrencesOfString:@"maps:" withString:@""]]];
-		} else if ([url.host hasPrefix:@"maps.google.co"] && [url.path isEqualToString:@"/maps"]) {
-			return [NSURL URLWithString:[@"comgooglemaps://?" stringByAppendingString:url.query]];
-		}
-
-		return (id)nil;
-	}];
 }
