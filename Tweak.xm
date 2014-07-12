@@ -38,7 +38,35 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 %end
 %end
 
+#pragma mark - NSURL hooks
+
+%hook NSURL
+
++ (NSURL *)mapsURLWithSourceAddress:(NSString *)source destinationAddress:(NSString *)destination {
+    return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
+        ? [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", PERCENT_ENCODE(source), PERCENT_ENCODE(destination)]]
+        : %orig;
+}
+
++ (NSURL *)mapsURLWithAddress:(NSString *)address {
+    return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
+        ? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(address)]]
+        : %orig;
+}
+
++ (NSURL *)mapsURLWithQuery:(NSString *)query {
+    return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
+        ? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(query)]]
+        : %orig;
+}
+
+%end
+
+#pragma mark - Constructor
+
 %ctor {
+    %init;
+
 	if (%c(MKMapItem)) {
 		%init(HBMOMapKit);
 	}
