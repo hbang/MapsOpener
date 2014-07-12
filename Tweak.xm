@@ -8,14 +8,7 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 		return @"";
 	} else {
 		NSDictionary *info = mapItem.placemark.addressDictionary;
-
-		return PERCENT_ENCODE(([NSString stringWithFormat:@"%@%@%@%@%@",
-			info[@"Street"] ? [info[@"Street"] stringByAppendingString:@" "] : @"",
-			info[@"City"] ? [info[@"City"] stringByAppendingString:@" "] : @"",
-			info[@"State"] ? [info[@"State"] stringByAppendingString:@" "] : @"",
-			info[@"ZIP"] ? [info[@"ZIP"] stringByAppendingString:@" "] : @"",
-			info[@"CountryCode"] ?: @""
-		]));
+		return PERCENT_ENCODE(([[NSString stringWithFormat:@"%@ %@ %@ %@ %@", info[@"Street"] ?: @"", info[@"City"] ?: @"", info[@"State"] ?: @"", info[@"ZIP"] ?: @"", info[@"CountryCode"] ?: @""] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]));
 	}
 }
 
