@@ -1,12 +1,10 @@
-TARGET = iphone:clang
-ARCHS = armv7 arm64
-
 include theos/makefiles/common.mk
 
 BUNDLE_NAME = MapsOpener
-MapsOpener_FILES = HBLOMapsOpenerHandler.m
+MapsOpener_FILES = HBLOMapsOpenerHandler.x
 MapsOpener_INSTALL_PATH = /Library/Opener
 MapsOpener_FRAMEWORKS = UIKit
+MapsOpener_LDFLAGS = -weak_framework MapKit
 MapsOpener_LIBRARIES = opener
 
 TWEAK_NAME = MapsOpenerHooks

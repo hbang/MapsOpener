@@ -19,11 +19,14 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
     }
 }
 
+#pragma mark - MapKit hooks
+
 %group HBMOMapKit
 %hook MKMapItem
 
 + (NSURL *)urlForMapItems:(NSArray *)items options:(id)options {
-	if (![[HBLibOpener sharedInstance] handlerIsEnabled:@"MapsOpener"] || items.count < 1 || ![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
+    NSLog(@"urlForMapItems:%@ options:%@",items,options);
+	if (![[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier] || items.count < 1 || ![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
 		return %orig;
 	} else if (items.count == 1) {
 		return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:HBMOMakeQuery(items[0])]];
