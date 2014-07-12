@@ -4,19 +4,19 @@
 #import <MapKit/MKPlacemark.h>
 
 NSString *HBMOMakeQuery(MKMapItem *mapItem) {
-    if (mapItem.isCurrentLocation) {
-        return @"";
-    } else {
-        NSDictionary *info = mapItem.placemark.addressDictionary;
+	if (mapItem.isCurrentLocation) {
+		return @"";
+	} else {
+		NSDictionary *info = mapItem.placemark.addressDictionary;
 
-        return PERCENT_ENCODE(([NSString stringWithFormat:@"%@%@%@%@%@",
-            info[@"Street"] ? [info[@"Street"] stringByAppendingString:@" "] : @"",
-            info[@"City"] ? [info[@"City"] stringByAppendingString:@" "] : @"",
-            info[@"State"] ? [info[@"State"] stringByAppendingString:@" "] : @"",
-            info[@"ZIP"] ? [info[@"ZIP"] stringByAppendingString:@" "] : @"",
-            info[@"CountryCode"] ?: @""
-        ]));
-    }
+		return PERCENT_ENCODE(([NSString stringWithFormat:@"%@%@%@%@%@",
+			info[@"Street"] ? [info[@"Street"] stringByAppendingString:@" "] : @"",
+			info[@"City"] ? [info[@"City"] stringByAppendingString:@" "] : @"",
+			info[@"State"] ? [info[@"State"] stringByAppendingString:@" "] : @"",
+			info[@"ZIP"] ? [info[@"ZIP"] stringByAppendingString:@" "] : @"",
+			info[@"CountryCode"] ?: @""
+		]));
+	}
 }
 
 #pragma mark - MapKit hooks
@@ -25,7 +25,7 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 %hook MKMapItem
 
 + (NSURL *)urlForMapItems:(NSArray *)items options:(id)options {
-    NSLog(@"urlForMapItems:%@ options:%@",items,options);
+	NSLog(@"urlForMapItems:%@ options:%@",items,options);
 	if (![[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier] || items.count < 1 || ![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
 		return %orig;
 	} else if (items.count == 1) {
@@ -43,21 +43,21 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 %hook NSURL
 
 + (NSURL *)mapsURLWithSourceAddress:(NSString *)source destinationAddress:(NSString *)destination {
-    return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
-        ? [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", PERCENT_ENCODE(source), PERCENT_ENCODE(destination)]]
-        : %orig;
+	return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
+		? [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", PERCENT_ENCODE(source), PERCENT_ENCODE(destination)]]
+		: %orig;
 }
 
 + (NSURL *)mapsURLWithAddress:(NSString *)address {
-    return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
-        ? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(address)]]
-        : %orig;
+	return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
+		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(address)]]
+		: %orig;
 }
 
 + (NSURL *)mapsURLWithQuery:(NSString *)query {
-    return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
-        ? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(query)]]
-        : %orig;
+	return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
+		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(query)]]
+		: %orig;
 }
 
 %end
@@ -65,7 +65,7 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 #pragma mark - Constructor
 
 %ctor {
-    %init;
+	%init;
 
 	if (%c(MKMapItem)) {
 		%init(HBMOMapKit);
