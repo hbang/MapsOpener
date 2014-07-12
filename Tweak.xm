@@ -18,7 +18,6 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 %hook MKMapItem
 
 + (NSURL *)urlForMapItems:(NSArray *)items options:(id)options {
-	NSLog(@"urlForMapItems:%@ options:%@",items,options);
 	if (![[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier] || items.count < 1 || ![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
 		return %orig;
 	} else if (items.count == 1) {
