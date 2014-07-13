@@ -1,6 +1,8 @@
 #import "Global.h"
 #import "HBLOMapsOpenerHandler.h"
+#import <UIKit/NSString+UIKitAdditions.h>
 #import <MapKit/MapKit.h>
+#include <dlfcn.h>
 
 @implementation HBLOMapsOpenerHandler
 
@@ -9,7 +11,7 @@
 
 	if (self) {
 		self.name = @"MapsOpener";
-		self.identifier = kHBMOHandlerIdentifier;
+		self.identifier = @"MapsOpener";
 	}
 
 	return self;
@@ -20,23 +22,29 @@
 		return nil;
 	}
 
-	static NSArray *SupportedPaths = nil;
+	static NSArray *GoogleMapsPaths = nil;
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
-		SupportedPaths = [@[ @"", @"place", @"search", @"dir" ] retain];
+		GoogleMapsPaths = [@[ @"", @"place", @"search", @"dir" ] retain];
 	});
 
 	if ([url.scheme isEqualToString:@"maps"]) {
-		if (%c(MKMapItem)) { // ios 6+
-			NSArray *items = [MKMapItem mapItemsFromURL:url options:nil];
-			return [MKMapItem urlForMapItems:items options:nil];
-		} else { // ios 5
-			return [NSURL URLWithString:[@"comgooglemaps://?" stringByAppendingString:[[url.absoluteString
-				stringByReplacingOccurrencesOfString:@"maps:address=" withString:@"maps:q="]
-				stringByReplacingOccurrencesOfString:@"maps:" withString:@""]]];
+		NSDictionary *query = [url.absoluteString substringFromIndex:5].queryKeysAndValues;
+
+		if (query[@"ios_addr"]) {
+			return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(query[@"ios_addr"])]];
+		} else if (query[@"address"]) {
+			return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(query[@"address"])]];
+		} else if (query[@"saddr"] && query[@"daddr"]) {
+			return [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", PERCENT_ENCODE(query[@"saddr"]), PERCENT_ENCODE(query[@"daddr"])]];
+		} else {
+			return nil;
 		}
+	} else if ([url.scheme isEqualToString:@"mapitem"] && %c(MKMapItem)) {
+		NSArray *items = [MKMapItem mapItemsFromURL:url options:nil];
+		return [MKMapItem urlForMapItems:items options:nil];
 	} else if (([url.host hasPrefix:@"maps.google."] && [url.path isEqualToString:@"/maps"])
-		|| (([url.host hasPrefix:@"google."] || [url.host hasPrefix:@"www.google."]) && url.pathComponents.count > 2 && [url.pathComponents[1] isEqualToString:@"maps"] && [SupportedPaths containsObject:url.pathComponents[2]])) {
+		|| (([url.host hasPrefix:@"google."] || [url.host hasPrefix:@"www.google."]) && url.pathComponents.count > 2 && [url.pathComponents[1] isEqualToString:@"maps"] && [GoogleMapsPaths containsObject:url.pathComponents[2]])) {
 		return [NSURL URLWithString:[@"comgooglemaps://?mapsurl=" stringByAppendingString:PERCENT_ENCODE(url.absoluteString)]];
 	}
 
