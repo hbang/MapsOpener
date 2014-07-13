@@ -2,7 +2,7 @@ Package: ws.hbang.mapsopener
 Name: MapsOpener
 Pre-Depends: firmware (>= 5.1)
 Depends: mobilesubstrate, ws.hbang.libopener (>= 2.0)
-Version: 1.4~beta1
+Version: 1.4~beta2
 Architecture: iphoneos-arm
 Description: Open Google Maps links in the App Store app
 Maintainer: HASHBANG Productions <support@hbang.ws>
