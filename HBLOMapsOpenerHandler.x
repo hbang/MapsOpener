@@ -58,7 +58,7 @@
 		 .*
 		*/
 
-		return [NSURL URLWithString:[@"comgooglemapsurl:" stringByAppendingString:[url.absoluteString substringFromIndex:url.scheme.length]]];
+		return [NSURL URLWithString:[@"comgooglemapsurl" stringByAppendingString:[url.absoluteString substringFromIndex:url.scheme.length]]];
 	}
 
 	return nil;
