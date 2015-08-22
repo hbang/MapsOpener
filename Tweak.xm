@@ -1,14 +1,28 @@
 #import "Global.h"
 #import <libopener/HBLibOpener.h>
-#import <MapKit/MKMapItem.h>
-#import <MapKit/MKPlacemark.h>
+
+@import CoreLocation;
+@import MapKit;
+
+@interface CLPlacemark (wtf)
+
+@property (nonatomic, readonly, copy) CLLocation *location;
+
+@end
 
 NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 	if (mapItem.isCurrentLocation) {
+		/*
+		 if the saddr arg is empty, then google maps uses the current location
+		*/
+
 		return @"";
-	} else {
+	} else if (mapItem.placemark.addressDictionary) {
 		NSDictionary *info = mapItem.placemark.addressDictionary;
 		return PERCENT_ENCODE(([[NSString stringWithFormat:@"%@ %@ %@ %@ %@", info[@"Street"] ?: @"", info[@"City"] ?: @"", info[@"State"] ?: @"", info[@"ZIP"] ?: @"", info[@"CountryCode"] ?: @""] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]));
+	} else {
+		CLLocationCoordinate2D coord = mapItem.placemark.location.coordinate;
+		return PERCENT_ENCODE(([NSString stringWithFormat:@"%f,%f", coord.latitude, coord.longitude]));
 	}
 }
 
