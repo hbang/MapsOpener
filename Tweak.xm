@@ -28,7 +28,7 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 
 #pragma mark - MapKit hooks
 
-%group HBMOMapKit
+%group MapKit
 %hook MKMapItem
 
 + (NSURL *)urlForMapItems:(NSArray *)items options:(id)options {
@@ -68,12 +68,31 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 
 %end
 
+#pragma mark - Init function
+
+/*
+ to shut up a logos error which complains when there's multiple %inits for
+ the same thing
+*/
+
+inline void initMapKitHooks() {
+	%init(MapKit);
+}
+
 #pragma mark - Constructor
 
 %ctor {
 	%init;
 
-	if (%c(MKMapItem)) {
-		%init(HBMOMapKit);
+	NSBundle *bundle = [NSBundle bundleWithIdentifier:@"com.apple.MapKit"];
+
+	if (bundle.isLoaded) {
+		initMapKitHooks();
+	} else {
+		[[NSNotificationCenter defaultCenter] addObserverForName:NSBundleDidLoadNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+			if (notification.object == bundle) {
+				initMapKitHooks();
+			}
+		}];
 	}
 }
