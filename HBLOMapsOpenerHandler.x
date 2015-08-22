@@ -1,8 +1,9 @@
 #import "Global.h"
 #import "HBLOMapsOpenerHandler.h"
 #import <UIKit/NSString+UIKitAdditions.h>
-#import <MapKit/MapKit.h>
 #include <dlfcn.h>
+
+@import MapKit;
 
 @implementation HBLOMapsOpenerHandler
 
@@ -22,12 +23,6 @@
 		return nil;
 	}
 
-	static NSArray *GoogleMapsPaths = nil;
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		GoogleMapsPaths = [@[ @"", @"place", @"search", @"dir" ] retain];
-	});
-
 	if ([url.scheme isEqualToString:@"maps"]) {
 		NSDictionary *query = [url.absoluteString substringFromIndex:5].queryKeysAndValues;
 
@@ -38,14 +33,32 @@
 		} else if (query[@"saddr"] && query[@"daddr"]) {
 			return [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", PERCENT_ENCODE(query[@"saddr"]), PERCENT_ENCODE(query[@"daddr"])]];
 		} else {
+			HBLogError(@"failed to handle unknown maps: url: %@", url);
 			return nil;
 		}
-	} else if ([url.scheme isEqualToString:@"mapitem"] && %c(MKMapItem)) {
+	} else if ([url.scheme isEqualToString:@"mapitem"]) {
+		dlopen("/Library/MobileSubstrate/DynamicLibraries/MapsOpenerHooks.dylib", RTLD_LAZY);
+
 		NSArray *items = [MKMapItem mapItemsFromURL:url options:nil];
-		return [MKMapItem urlForMapItems:items options:nil];
-	} else if (([url.host hasPrefix:@"maps.google."] && [url.path isEqualToString:@"/maps"])
-		|| (([url.host hasPrefix:@"google."] || [url.host hasPrefix:@"www.google."]) && url.pathComponents.count > 2 && [url.pathComponents[1] isEqualToString:@"maps"] && [GoogleMapsPaths containsObject:url.pathComponents[2]])) {
-		return [NSURL URLWithString:[@"comgooglemaps://?mapsurl=" stringByAppendingString:PERCENT_ENCODE(url.absoluteString)]];
+		NSURL *url = [MKMapItem urlForMapItems:items options:nil];
+
+		/*
+		 if, for some reason, we failed, don't use the new url which may have
+		 missing data
+		*/
+		return [url.host isEqualToString:@"mapitem"] ? nil : url;
+	} else if ([url.host hasPrefix:@"maps.google."] || (([url.host hasPrefix:@"google."] || [url.host hasPrefix:@"www.google."] || [url.host isEqualToString:@"goo.gl"]) && url.pathComponents.count > 2 && [url.pathComponents[1] isEqualToString:@"maps"])) {
+		/*
+		 matches the regex from the docs:
+
+		 (http(s?)://)?
+		 ((maps\.google\.{TLD}/)|
+		  ((www\.)?google\.{TLD}/maps/)|
+		  (goo.gl/maps/))
+		 .*
+		*/
+
+		return [NSURL URLWithString:[@"comgooglemapsurl:" stringByAppendingString:[url.absoluteString substringFromIndex:url.scheme.length]]];
 	}
 
 	return nil;
