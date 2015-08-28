@@ -58,7 +58,17 @@
 		 .*
 		*/
 
-		return [NSURL URLWithString:[@"comgooglemapsurl" stringByAppendingString:[url.absoluteString substringFromIndex:url.scheme.length]]];
+		if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemapsurl://"]]) {
+			return [NSURL URLWithString:[@"comgooglemapsurl" stringByAppendingString:[url.absoluteString substringFromIndex:url.scheme.length]]];
+		} else {
+			/*
+			 fall back to the undocumented comgooglemaps://?mapsurl=, because
+			 gmaps dropped support for iOS 6 long before comgooglemapsurl://
+			 was introduced
+			*/
+
+			return [NSURL URLWithString:[@"comgooglemaps://?mapsurl=" stringByAppendingString:PERCENT_ENCODE(url.absoluteString)]];
+		}
 	}
 
 	return nil;
