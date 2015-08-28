@@ -1,5 +1,6 @@
 #import "Global.h"
 #import <libopener/HBLibOpener.h>
+#import <version.h>
 
 @import CoreLocation;
 @import MapKit;
@@ -88,11 +89,23 @@ inline void initMapKitHooks() {
 %ctor {
 	%init;
 
+	/*
+	 if MapKit is loaded into this process, we want to initialise our MapKit
+	 hooks. if not, we need to listen for a bundle load notification in case of
+	 the chance that the app late loads it
+	*/
+
 	NSBundle *bundle = [NSBundle bundleWithIdentifier:@"com.apple.MapKit"];
 
 	if (bundle.isLoaded) {
 		initMapKitHooks();
-	} else {
+	} else if (IS_IOS_OR_NEWER(iOS_7_0)) {
+		/*
+		 this causes freezes in some apps on iOS 6. rather than supporting old
+		 versions everyone should really stop using already, only do this for
+		 iOS 7+
+		*/
+
 		[[NSNotificationCenter defaultCenter] addObserverForName:NSBundleDidLoadNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
 			if (notification.object == bundle) {
 				initMapKitHooks();
