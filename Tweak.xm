@@ -26,13 +26,17 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 	}
 }
 
+inline BOOL isEnabled() {
+	return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier] && [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]];
+}
+
 #pragma mark - MapKit hooks
 
 %group MapKit
 %hook MKMapItem
 
 + (NSURL *)urlForMapItems:(NSArray *)items options:(id)options {
-	if (![[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier] || items.count < 1 || ![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
+	if (!isEnabled() || items.count < 1) {
 		return %orig;
 	} else if (items.count == 1) {
 		return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:HBMOMakeQuery(items[0])]];
@@ -49,19 +53,19 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 %hook NSURL
 
 + (NSURL *)mapsURLWithSourceAddress:(NSString *)source destinationAddress:(NSString *)destination {
-	return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
+	return isEnabled()
 		? [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", PERCENT_ENCODE(source), PERCENT_ENCODE(destination)]]
 		: %orig;
 }
 
 + (NSURL *)mapsURLWithAddress:(NSString *)address {
-	return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
+	return isEnabled()
 		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(address)]]
 		: %orig;
 }
 
 + (NSURL *)mapsURLWithQuery:(NSString *)query {
-	return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier]
+	return isEnabled()
 		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(query)]]
 		: %orig;
 }
