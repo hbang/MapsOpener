@@ -47,7 +47,14 @@
 		 missing data
 		*/
 		return [url.host isEqualToString:@"mapitem"] ? nil : url;
-	} else if ([url.host hasPrefix:@"maps.google."] || (([url.host hasPrefix:@"google."] || [url.host hasPrefix:@"www.google."] || [url.host isEqualToString:@"goo.gl"]) && url.pathComponents.count > 2 && [url.pathComponents[1] isEqualToString:@"maps"])) {
+	} else if (
+		([url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"https"]) && // scheme is https?:, and
+		([url.host hasPrefix:@"maps.google."] || // host is maps.google.TLD, or
+			(
+				([url.host hasPrefix:@"google."] || [url.host hasPrefix:@"www.google."] || [url.host isEqualToString:@"goo.gl"]) // google.TLD or goo.gl, and
+				&& url.pathComponents.count > 2 && [url.pathComponents[1] isEqualToString:@"maps"] // we have >2 path components; the first is "maps"
+			)
+		)) {
 		/*
 		 matches the regex from the docs:
 
