@@ -3,4 +3,4 @@ Does exactly what it sounds like it does - opens Google Maps links in the new ap
 
 Google's official documentation on the URL scheme: https://developers.google.com/maps/documentation/ios/urlscheme
 
-[GPLv3](http://hbang.ws/s/gpl)
+Licensed under the [GNU General Public License, version 3.0](https://www.gnu.org/licenses/gpl-3.0.en.html).
