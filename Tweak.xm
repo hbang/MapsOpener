@@ -99,11 +99,14 @@ inline void initMapKitHooks() {
 
 	if (bundle.isLoaded) {
 		initMapKitHooks();
-	} else if (IS_IOS_OR_NEWER(iOS_7_0)) {
+	} else if (IS_IOS_OR_NEWER(iOS_7_0) && !IS_IOS_OR_NEWER(iOS_9_0)) {
 		/*
 		 this causes freezes in some apps on iOS 6. rather than supporting old
 		 versions everyone should really stop using already, only do this for
 		 iOS 7+
+
+		 … this is additionally broken on iOS 9, so disabling this for now.
+		 probably only worked by complete luck on iOS 8?
 		*/
 
 		[[NSNotificationCenter defaultCenter] addObserverForName:NSBundleDidLoadNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
