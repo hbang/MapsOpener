@@ -18,13 +18,30 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 		*/
 
 		return @"";
-	} else if (mapItem.placemark.addressDictionary) {
+	}
+
+	NSString *query = nil;
+
+	if (mapItem.placemark.addressDictionary) {
 		NSDictionary *info = mapItem.placemark.addressDictionary;
-		return PERCENT_ENCODE(([[NSString stringWithFormat:@"%@ %@ %@ %@ %@", info[@"Street"] ?: @"", info[@"City"] ?: @"", info[@"State"] ?: @"", info[@"ZIP"] ?: @"", info[@"CountryCode"] ?: @""] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]));
-	} else {
+		query = PERCENT_ENCODE(([[NSString stringWithFormat:@"%@ %@ %@ %@ %@", info[@"Street"] ?: @"", info[@"City"] ?: @"", info[@"State"] ?: @"", info[@"ZIP"] ?: @"", info[@"CountryCode"] ?: @""] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]));
+	}
+
+	if (!query || [query isEqualToString:@""]) {
+		/*
+		 if the address dictionary was empty or didn't contain the keys we need,
+		 fall back to coordinates
+		*/
+
+		if (!mapItem.placemark.location) {
+			return nil;
+		}
+
 		CLLocationCoordinate2D coord = mapItem.placemark.location.coordinate;
 		return PERCENT_ENCODE(([NSString stringWithFormat:@"%f,%f", coord.latitude, coord.longitude]));
 	}
+
+	return query;
 }
 
 inline BOOL isEnabled() {
