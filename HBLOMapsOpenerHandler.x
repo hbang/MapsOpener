@@ -19,10 +19,6 @@
 }
 
 - (NSURL *)openURL:(NSURL *)url sender:(NSString *)sender {
-	if (![[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]]) {
-		return nil;
-	}
-
 	if ([url.scheme isEqualToString:@"maps"]) {
 		NSDictionary *query = [url.absoluteString substringFromIndex:5].queryKeysAndValues;
 
