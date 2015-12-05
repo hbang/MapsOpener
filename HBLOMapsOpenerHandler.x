@@ -1,5 +1,6 @@
 #import "Global.h"
 #import "HBLOMapsOpenerHandler.h"
+#import <MobileCoreServices/LSApplicationWorkspace.h>
 #import <UIKit/NSString+UIKitAdditions.h>
 #include <dlfcn.h>
 
@@ -69,7 +70,7 @@
 		 .*
 		*/
 
-		if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemapsurl://"]]) {
+		if ([[LSApplicationWorkspace defaultWorkspace] applicationsAvailableForHandlingURLScheme:@"comgooglemapsurl"].count > 0) {
 			return [NSURL URLWithString:[@"comgooglemapsurl" stringByAppendingString:[url.absoluteString substringFromIndex:url.scheme.length]]];
 		} else {
 			/*

@@ -3,6 +3,7 @@ include $(THEOS)/makefiles/common.mk
 BUNDLE_NAME = MapsOpener
 MapsOpener_FILES = HBLOMapsOpenerHandler.x
 MapsOpener_INSTALL_PATH = /Library/Opener
+MapsOpener_PRIVATE_FRAMEWORKS = MobileCoreServices
 MapsOpener_WEAK_FRAMEWORKS = MapKit
 MapsOpener_EXTRA_FRAMEWORKS = Opener
 
