@@ -18,3 +18,6 @@ after-install::
 ifneq ($(RESPRING),0)
 	install.exec spring
 endif
+
+test::
+	install.exec "cycript -p SpringBoard" < test.cy
