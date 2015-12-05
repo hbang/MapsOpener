@@ -20,7 +20,15 @@
 
 - (NSURL *)openURL:(NSURL *)url sender:(NSString *)sender {
 	if ([url.scheme isEqualToString:@"maps"]) {
-		NSDictionary *query = [url.absoluteString substringFromIndex:5].queryKeysAndValues;
+		// grab the query string from a url of format maps:address=blah. with
+		// iOS 9, ContactsUI now uses maps:?address=blah, for whatever reason
+		NSString *queryString = [url.absoluteString substringFromIndex:5];
+
+		if ([queryString hasPrefix:@"?"]) {
+			queryString = [queryString substringFromIndex:1];
+		}
+
+		NSDictionary *query = queryString.queryKeysAndValues;
 
 		if (query[@"ios_addr"]) {
 			return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(query[@"ios_addr"])]];
