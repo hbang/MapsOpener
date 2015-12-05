@@ -7,6 +7,7 @@
 
 @interface CLPlacemark (wtf)
 
+// this comes from the public header. what?
 @property (nonatomic, readonly, copy) CLLocation *location;
 
 @end
@@ -76,11 +77,13 @@ inline BOOL isEnabled() {
 		: %orig;
 }
 
+%group PreCue
 + (NSURL *)mapsURLWithAddress:(NSString *)address {
 	return isEnabled()
 		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(address)]]
 		: %orig;
 }
+%end
 
 + (NSURL *)mapsURLWithQuery:(NSString *)query {
 	return isEnabled()
@@ -105,6 +108,11 @@ inline void initMapKitHooks() {
 
 %ctor {
 	%init;
+
+	// one method was removed in iOS 9
+	if (!IS_IOS_OR_NEWER(iOS_9_0)) {
+		%init(PreCue);
+	}
 
 	/*
 	 if MapKit is loaded into this process, we want to initialise our MapKit
