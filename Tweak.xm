@@ -104,6 +104,30 @@ inline void initMapKitHooks() {
 	%init(MapKit);
 }
 
+%group MapKitLateLoad
+
+// really, this should not be a hook on -[NSBundle load]. but, for reasons i
+// still don’t understand, in some apps listening for the notification causes
+// the app to freeze…
+
+%hook NSBundle
+
+- (BOOL)load {
+	if (!%orig) {
+		return NO;
+	}
+
+	if ([self.bundleIdentifier isEqualToString:@"com.apple.MapKit"]) {
+		initMapKitHooks();
+	}
+
+	return YES;
+}
+
+%end
+
+%end
+
 #pragma mark - Constructor
 
 %ctor {
@@ -120,21 +144,9 @@ inline void initMapKitHooks() {
 	 the chance that the app late loads it
 	*/
 
-	NSBundle *bundle = [NSBundle bundleWithIdentifier:@"com.apple.MapKit"];
-
-	if (bundle.isLoaded) {
+	if ([NSBundle bundleWithIdentifier:@"com.apple.MapKit"].isLoaded) {
 		initMapKitHooks();
 	} else if (IS_IOS_OR_NEWER(iOS_7_0)) {
-		/*
-		 this causes freezes in some apps on iOS 6. rather than supporting old
-		 versions everyone should really stop using already, only do this for
-		 iOS 7+
-		*/
-
-		[[NSNotificationCenter defaultCenter] addObserverForName:NSBundleDidLoadNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
-			if (notification.object == bundle) {
-				initMapKitHooks();
-			}
-		}];
+		%init(MapKitLateLoad);
 	}
 }
