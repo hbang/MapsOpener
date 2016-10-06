@@ -7,10 +7,7 @@
 
 NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 	if (mapItem.isCurrentLocation) {
-		/*
-		 if the saddr arg is empty, then google maps uses the current location
-		*/
-
+		// if the saddr arg is empty, then google maps uses the current location
 		return @"";
 	}
 
@@ -22,11 +19,8 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 	}
 
 	if (!query || [query isEqualToString:@""]) {
-		/*
-		 if the address dictionary was empty or didn't contain the keys we need,
-		 fall back to coordinates
-		*/
-
+		// if the address dictionary was empty or didn't contain the keys we need,
+		// fall back to coordinates
 		if (!mapItem.placemark.location) {
 			return nil;
 		}
@@ -88,11 +82,8 @@ inline BOOL isEnabled() {
 
 #pragma mark - Init function
 
-/*
- to shut up a logos error which complains when there's multiple %inits for
- the same thing
-*/
-
+// to shut up a logos error which complains when there's multiple %inits for
+// the same thing
 inline void initMapKitHooks() {
 	%init(MapKit);
 }
@@ -131,12 +122,9 @@ inline void initMapKitHooks() {
 		%init(PreCue);
 	}
 
-	/*
-	 if MapKit is loaded into this process, we want to initialise our MapKit
-	 hooks. if not, we need to listen for a bundle load notification in case of
-	 the chance that the app late loads it
-	*/
-
+	// if MapKit is loaded into this process, we want to initialise our MapKit
+	// hooks. if not, we need to listen for a bundle load notification in case of
+	// the chance that the app late loads it
 	if ([NSBundle bundleWithIdentifier:@"com.apple.MapKit"].isLoaded) {
 		initMapKitHooks();
 	} else if (IS_IOS_OR_NEWER(iOS_7_0)) {

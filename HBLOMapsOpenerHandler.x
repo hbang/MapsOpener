@@ -22,6 +22,15 @@
 }
 
 - (NSURL *)openURL:(NSURL *)url sender:(NSString *)sender {
+	// maps: the simplest of all, used most of the time when the address is only
+	// known as a string. less commonly used these days but still used for
+	// auto detected links in text/web views
+	//
+	// mapitem://, x-maps-mapitemhandles://: used when there is already an
+	// MKMapItem, and it is serialised into a URL to be viewed in the maps app
+	//
+	// google urls: we try to pick up when the google maps site is being opened,
+	// so we can direct to the app instead
 	if ([url.scheme isEqualToString:@"maps"]) {
 		// grab the query string from a url of format maps:address=blah. with
 		// iOS 9, ContactsUI now uses maps:?address=blah, for whatever reason
@@ -33,6 +42,11 @@
 
 		NSDictionary *query = queryString.queryKeysAndValues;
 
+		// ios_addr, address: used in iOS 6 calendar/contacts/etc when the query is
+		// almost definitely an address
+		// q: still used in some places on iOS 6, and probably various apps/sites
+		// ll: longitude,latitude
+		// saddr, daddr: start and destination addresses
 		if (query[@"ios_addr"]) {
 			return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(query[@"ios_addr"])]];
 		} else if (query[@"address"]) {
@@ -48,15 +62,16 @@
 			return nil;
 		}
 	} else if ([url.scheme isEqualToString:@"mapitem"]) {
+		// load our hooks dylib for this to work
 		dlopen("/Library/MobileSubstrate/DynamicLibraries/MapsOpenerHooks.dylib", RTLD_LAZY);
 
-		NSArray *items = [MKMapItem mapItemsFromURL:url options:nil];
+		// turn the url back into an array of MKMapItems, then back to a url, so
+		// our hook on urlForMapItems:options: is executed
+		NSArray <MKMapItem *> *items = [MKMapItem mapItemsFromURL:url options:nil];
 		NSURL *url = [MKMapItem urlForMapItems:items options:nil];
 
-		/*
-		 if, for some reason, we failed, don't use the new url which may have
-		 missing data
-		*/
+		// if, for some reason, we failed, don't use the new url which may have
+		// missing data
 		return [url.host isEqualToString:@"mapitem"] ? nil : url;
 	} else if (
 		([url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"https"]) && // scheme is https?:, and
@@ -79,12 +94,9 @@
 		if ([[LSApplicationWorkspace defaultWorkspace] applicationsAvailableForHandlingURLScheme:@"comgooglemapsurl"].count > 0) {
 			return [NSURL URLWithString:[@"comgooglemapsurl" stringByAppendingString:[url.absoluteString substringFromIndex:url.scheme.length]]];
 		} else {
-			/*
-			 fall back to the undocumented comgooglemaps://?mapsurl=, because
-			 gmaps dropped support for iOS 6 long before comgooglemapsurl://
-			 was introduced
-			*/
-
+			// fall back to the undocumented comgooglemaps://?mapsurl=, because
+			// gmaps dropped support for iOS 6 long before comgooglemapsurl://
+			// was introduced
 			return [NSURL URLWithString:[@"comgooglemaps://?mapsurl=" stringByAppendingString:PERCENT_ENCODE(url.absoluteString)]];
 		}
 	}
