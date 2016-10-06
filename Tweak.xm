@@ -1,16 +1,9 @@
 #import "Global.h"
-#import <libopener/HBLibOpener.h>
+#import <Opener/HBLibOpener.h>
 #import <version.h>
 
 @import CoreLocation;
 @import MapKit;
-
-@interface CLPlacemark (wtf)
-
-// this comes from the public header. what?
-@property (nonatomic, readonly, copy) CLLocation *location;
-
-@end
 
 NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 	if (mapItem.isCurrentLocation) {

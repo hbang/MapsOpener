@@ -1,7 +1,9 @@
+@import MapKit;
 #import "Global.h"
 #import "HBLOMapsOpenerHandler.h"
 #import <MobileCoreServices/LSApplicationWorkspace.h>
 #import <UIKit/NSString+UIKitAdditions.h>
+#import <MapKit/MKMapItem+Private.h>
 #include <dlfcn.h>
 
 @import MapKit;

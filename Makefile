@@ -1,3 +1,5 @@
+TARGET = iphone:clang:latest:5.1
+
 include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = MapsOpener
