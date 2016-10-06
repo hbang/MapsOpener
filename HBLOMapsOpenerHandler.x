@@ -73,6 +73,32 @@
 		// if, for some reason, we failed, don't use the new url which may have
 		// missing data
 		return [url.host isEqualToString:@"mapitem"] ? nil : url;
+	} else if ([url.scheme isEqualToString:@"x-maps-mapitemhandles"]) {
+		// load our hooks dylib for this to work
+		dlopen("/Library/MobileSubstrate/DynamicLibraries/MapsOpenerHooks.dylib", RTLD_LAZY);
+
+		// i’m convinced apple added this because they hate me. we do basically the
+		// same thing as mapitem://, because this type of url serves the exact same
+		// purpose, but now the api is async! what joy
+		// make a semaphore so we can do the fun task of hanging the main thread
+		dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+		__block NSURL *newURL = nil;
+
+		[MKMapItem _mapItemsFromHandleURL:url completionHandler:^(NSArray <MKMapItem *> *items) {
+			HBLogDebug(@"ay %@", items);
+
+			// i kinda really don’t care, just use the old method
+			newURL = [MKMapItem urlForMapItems:items options:nil];
+
+			// signal that we’re done
+			dispatch_semaphore_signal(semaphore);
+		}];
+
+		// wait for the semaphore, with a 1 sec timeout
+		dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC));
+
+		// do the same return thing as above
+		return url && [url.host isEqualToString:@"mapitem"] ? nil : url;
 	} else if (
 		([url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"https"]) && // scheme is https?:, and
 		([url.host hasPrefix:@"maps.google."] || // host is maps.google.TLD, or
