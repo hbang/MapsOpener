@@ -2,6 +2,7 @@
 #import "Global.h"
 #import "HBLOMapsOpenerHandler.h"
 #import <MobileCoreServices/LSApplicationWorkspace.h>
+#import <MobileCoreServices/NSURL+LSAdditions.h>
 #import <UIKit/NSString+UIKitAdditions.h>
 #import <MapKit/MKMapItem+Private.h>
 #include <dlfcn.h>
@@ -22,6 +23,9 @@
 }
 
 - (NSURL *)openURL:(NSURL *)url sender:(NSString *)sender {
+	// the mapsURL method will translate a maps.apple.com url into a maps: uri, or return nil
+	url = url.mapsURL ?: url;
+
 	// maps: the simplest of all, used most of the time when the address is only
 	// known as a string. less commonly used these days but still used for
 	// auto detected links in text/web views
@@ -85,8 +89,6 @@
 		__block NSURL *newURL = nil;
 
 		[MKMapItem _mapItemsFromHandleURL:url completionHandler:^(NSArray <MKMapItem *> *items) {
-			HBLogDebug(@"ay %@", items);
-
 			// i kinda really don’t care, just use the old method
 			newURL = [MKMapItem urlForMapItems:items options:nil];
 
