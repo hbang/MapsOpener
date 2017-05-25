@@ -7,5 +7,9 @@ Architecture: iphoneos-arm
 Description: Open map links in Google Maps
 Maintainer: HASHBANG Productions <support@hbang.ws>
 Author: HASHBANG Productions <support@hbang.ws>
-Support: https://www.hbang.ws/faq/
 Section: Tweaks
+Icon: file:///Library/Opener/MapsOpener.bundle/icon@2x.png
+Suport: https://hbang.ws/support/
+Sponsor: thebigboss.org <http://thebigboss.org>
+Tag: purpose::extension, compatible::ios5, compatible::ios6, compatible::ios7, compatible::ios8, compatible::ios9, compatible::ios10
+dev: hbang
