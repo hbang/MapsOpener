@@ -1,9 +1,13 @@
-#import "Global.h"
+@import CoreLocation;
+@import MapKit;
 #import <Opener/HBLibOpener.h>
 #import <version.h>
 
-@import CoreLocation;
-@import MapKit;
+@interface MKPlacemark ()
+
+- (CLLocation *)location;
+
+@end
 
 NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 	if (mapItem.isCurrentLocation) {
@@ -13,26 +17,29 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 
 	NSString *query = nil;
 
+	// if we have an address dictionary, then we use that
 	if (mapItem.placemark.addressDictionary) {
+		// construct the query string using as much info as we have, and then trim any extraneous spaces
 		NSDictionary *info = mapItem.placemark.addressDictionary;
-		query = PERCENT_ENCODE(([[NSString stringWithFormat:@"%@ %@ %@ %@ %@", info[@"Street"] ?: @"", info[@"City"] ?: @"", info[@"State"] ?: @"", info[@"ZIP"] ?: @"", info[@"CountryCode"] ?: @""] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]));
+		query = [[NSString stringWithFormat:@"%@ %@ %@ %@ %@", info[@"Street"] ?: @"", info[@"City"] ?: @"", info[@"State"] ?: @"", info[@"ZIP"] ?: @"", info[@"CountryCode"] ?: @""] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 	}
 
+	// if the address dictionary was empty or didn't contain the keys we need, fall back to using the
+	// coordinates
 	if (!query || [query isEqualToString:@""]) {
-		// if the address dictionary was empty or didn't contain the keys we need,
-		// fall back to coordinates
 		if (!mapItem.placemark.location) {
 			return nil;
 		}
 
 		CLLocationCoordinate2D coord = mapItem.placemark.location.coordinate;
-		return PERCENT_ENCODE(([NSString stringWithFormat:@"%f,%f", coord.latitude, coord.longitude]));
+		return [NSString stringWithFormat:@"%.6f,%.6f", coord.latitude, coord.longitude];
 	}
 
-	return query;
+	return URL_QUERY_ENCODE(query);
 }
 
-inline BOOL isEnabled() {
+static inline BOOL isEnabled() {
+	// we’re enabled if opener says we are, and google maps is installed
 	return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier] && [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]];
 }
 
@@ -42,7 +49,10 @@ inline BOOL isEnabled() {
 %hook MKMapItem
 
 + (NSURL *)urlForMapItems:(NSArray *)items options:(id)options {
-	if (!isEnabled() || items.count < 1) {
+	// if we’re disabled or there aren’t any items, just call the original implementation. if there is
+	// one item, use it as a search query. if there are two (or more), use item 0 as the source
+	// address and item 1 as the destination address
+	if (!isEnabled() || items.count == 0) {
 		return %orig;
 	} else if (items.count == 1) {
 		return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:HBMOMakeQuery(items[0])]];
@@ -60,21 +70,21 @@ inline BOOL isEnabled() {
 
 + (NSURL *)mapsURLWithSourceAddress:(NSString *)source destinationAddress:(NSString *)destination {
 	return isEnabled()
-		? [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", PERCENT_ENCODE(source), PERCENT_ENCODE(destination)]]
+		? [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", URL_QUERY_ENCODE(source), URL_QUERY_ENCODE(destination)]]
 		: %orig;
 }
 
 %group PreCue
 + (NSURL *)mapsURLWithAddress:(NSString *)address {
 	return isEnabled()
-		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(address)]]
+		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:URL_QUERY_ENCODE(address)]]
 		: %orig;
 }
 %end
 
 + (NSURL *)mapsURLWithQuery:(NSString *)query {
 	return isEnabled()
-		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:PERCENT_ENCODE(query)]]
+		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:URL_QUERY_ENCODE(query)]]
 		: %orig;
 }
 
@@ -82,25 +92,25 @@ inline BOOL isEnabled() {
 
 #pragma mark - Init function
 
-// to shut up a logos error which complains when there's multiple %inits for
-// the same thing
-inline void initMapKitHooks() {
+// to shut up a logos error which complains when there's multiple %inits for the same thing
+static inline void initMapKitHooks() {
 	%init(MapKit);
 }
 
 %group MapKitLateLoad
 
-// really, this should not be a hook on -[NSBundle load]. but, for reasons i
-// still don’t understand, in some apps listening for the notification causes
-// the app to freeze…
+// really, this should not be a hook on -[NSBundle load]. but, for reasons i still don’t understand,
+// in some apps listening for the notification causes the app to freeze…
 
 %hook NSBundle
 
 - (BOOL)load {
+	// load the bundle. if it failed, just return NO and do nothing else
 	if (!%orig) {
 		return NO;
 	}
 
+	// if this is MapKit, hook it!
 	if ([self.bundleIdentifier isEqualToString:@"com.apple.MapKit"]) {
 		initMapKitHooks();
 	}
@@ -122,9 +132,9 @@ inline void initMapKitHooks() {
 		%init(PreCue);
 	}
 
-	// if MapKit is loaded into this process, we want to initialise our MapKit
-	// hooks. if not, we need to listen for a bundle load notification in case of
-	// the chance that the app late loads it
+	// if MapKit is loaded into this process, we want to initialise our MapKit hooks. if not, we need
+	// to listen for a bundle load notification in case of the chance that the app late loads it. we
+	// only support this on iOS 7+
 	if ([NSBundle bundleWithIdentifier:@"com.apple.MapKit"].isLoaded) {
 		initMapKitHooks();
 	} else if (IS_IOS_OR_NEWER(iOS_7_0)) {

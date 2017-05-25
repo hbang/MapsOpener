@@ -34,7 +34,7 @@ var handler = [[HBLOMapsOpenerHandler alloc] init];
 // handler class should exist and be able to instantiate
 assert_not_null(handler);
 
-// test that the NSURL+UIKitAdditions
+// test that the NSURL+UIKitAdditions are translated
 assert_equal([NSURL mapsURLWithQuery:"1 Infinite Loop, Cupertino CA 95014"].absoluteString, "comgooglemaps://?q=1%20Infinite%20Loop%2C%20Cupertino%20CA%2095014");
 assert_equal([NSURL mapsURLWithSourceAddress:"1 Infinite Loop, Cupertino CA 95014" destinationAddress:"742 Evergreen Terrace, Springfield"].absoluteString, "comgooglemaps://?saddr=1%20Infinite%20Loop%2C%20Cupertino%20CA%2095014&daddr=742%20Evergreen%20Terrace%2C%20Springfield");
 
