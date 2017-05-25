@@ -10,7 +10,7 @@ MapsOpener_WEAK_FRAMEWORKS = MapKit
 MapsOpener_EXTRA_FRAMEWORKS = Opener
 
 TWEAK_NAME = MapsOpenerHooks
-MapsOpenerHooks_FILES = Tweak.xm
+MapsOpenerHooks_FILES = Tweak.x
 MapsOpenerHooks_EXTRA_FRAMEWORKS = Opener
 
 include $(THEOS_MAKE_PATH)/bundle.mk
