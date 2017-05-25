@@ -3,15 +3,29 @@
 #import <Opener/HBLibOpener.h>
 #import <version.h>
 
+// i can’t work out why i have to do this. it’s in the damn public header
 @interface MKPlacemark ()
 
 - (CLLocation *)location;
 
 @end
 
-NSString *HBMOMakeQuery(MKMapItem *mapItem) {
+#pragma mark - Helpers
+
+static inline BOOL isEnabled() {
+	// we’re enabled if opener says we are, and google maps is installed
+	return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier] && [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]];
+}
+
+static inline NSURL *gmapsURLWithQuery(NSDictionary <NSString *, NSString *> *query) {
+	return [NSURL URLWithString:[@"comgooglemaps://?" stringByAppendingString:queryStringFromDictionary(query)]];
+}
+
+#pragma mark - MapKit hooks
+
+static NSString *queryFromMapItem(MKMapItem *mapItem) {
 	if (mapItem.isCurrentLocation) {
-		// if the saddr arg is empty, then google maps uses the current location
+		// if the saddr or daddr arg is empty, then google maps uses the current location
 		return @"";
 	}
 
@@ -35,15 +49,8 @@ NSString *HBMOMakeQuery(MKMapItem *mapItem) {
 		return [NSString stringWithFormat:@"%.6f,%.6f", coord.latitude, coord.longitude];
 	}
 
-	return URL_QUERY_ENCODE(query);
+	return query;
 }
-
-static inline BOOL isEnabled() {
-	// we’re enabled if opener says we are, and google maps is installed
-	return [[HBLibOpener sharedInstance] handlerIsEnabled:kHBMOHandlerIdentifier] && [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"comgooglemaps://"]];
-}
-
-#pragma mark - MapKit hooks
 
 %group MapKit
 %hook MKMapItem
@@ -55,9 +62,14 @@ static inline BOOL isEnabled() {
 	if (!isEnabled() || items.count == 0) {
 		return %orig;
 	} else if (items.count == 1) {
-		return [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:HBMOMakeQuery(items[0])]];
+		return gmapsURLWithQuery(@{
+			@"q": queryFromMapItem(items[0])
+		});
 	} else {
-		return [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", HBMOMakeQuery(items[0]), HBMOMakeQuery(items[1])]];
+		return gmapsURLWithQuery(@{
+			@"saddr": queryFromMapItem(items[0]),
+			@"daddr": queryFromMapItem(items[1])
+		});
 	}
 }
 
@@ -70,21 +82,28 @@ static inline BOOL isEnabled() {
 
 + (NSURL *)mapsURLWithSourceAddress:(NSString *)source destinationAddress:(NSString *)destination {
 	return isEnabled()
-		? [NSURL URLWithString:[NSString stringWithFormat:@"comgooglemaps://?saddr=%@&daddr=%@", URL_QUERY_ENCODE(source), URL_QUERY_ENCODE(destination)]]
+		? gmapsURLWithQuery(@{
+				@"saddr": source,
+				@"daddr": destination
+			})
 		: %orig;
 }
 
 %group PreCue
 + (NSURL *)mapsURLWithAddress:(NSString *)address {
 	return isEnabled()
-		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:URL_QUERY_ENCODE(address)]]
+		? gmapsURLWithQuery(@{
+				@"q": address
+			})
 		: %orig;
 }
 %end
 
 + (NSURL *)mapsURLWithQuery:(NSString *)query {
 	return isEnabled()
-		? [NSURL URLWithString:[@"comgooglemaps://?q=" stringByAppendingString:URL_QUERY_ENCODE(query)]]
+		? gmapsURLWithQuery(@{
+				@"q": query
+			})
 		: %orig;
 }
 
@@ -92,7 +111,7 @@ static inline BOOL isEnabled() {
 
 #pragma mark - Init function
 
-// to shut up a logos error which complains when there's multiple %inits for the same thing
+// to shut up a logos error which complains when there’s multiple %inits for the same thing
 static inline void initMapKitHooks() {
 	%init(MapKit);
 }
@@ -119,7 +138,6 @@ static inline void initMapKitHooks() {
 }
 
 %end
-
 %end
 
 #pragma mark - Constructor

@@ -11,7 +11,7 @@ MapsOpener_EXTRA_FRAMEWORKS = Opener
 MapsOpener_CFLAGS = -include Global.h -fobjc-arc
 
 TWEAK_NAME = MapsOpenerHooks
-MapsOpenerHooks_FILES = Tweak.x
+MapsOpenerHooks_FILES = Tweak.x QueryString.x
 MapsOpenerHooks_EXTRA_FRAMEWORKS = Opener
 MapsOpenerHooks_CFLAGS = -include Global.h -fobjc-arc
 

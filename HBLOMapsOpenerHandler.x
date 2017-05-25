@@ -6,12 +6,6 @@
 #import <MapKit/MKMapItem+Private.h>
 #include <dlfcn.h>
 
-@interface MKMapItem()
-+(void)_mapItemsFromHandleURL:(NSURL *)url completionHandler:(id)handler;
-@end
-
-@import MapKit;
-
 @implementation HBLOMapsOpenerHandler
 
 - (instancetype)init {
@@ -141,7 +135,9 @@
 		} else {
 			// fall back to the undocumented comgooglemaps://?mapsurl=, because gmaps dropped support for
 			// iOS 6 long before comgooglemapsurl:// was introduced
-			return [NSURL URLWithString:[@"comgooglemaps://?mapsurl=" stringByAppendingString:URL_QUERY_ENCODE(url.absoluteString)]];
+			return [NSURL URLWithString:[@"comgooglemaps://?" stringByAppendingString:queryStringFromDictionary(@{
+				@"mapsurl": url.absoluteString
+			})]];
 		}
 	}
 
