@@ -1,15 +1,15 @@
 Package: ws.hbang.mapsopener
 Name: MapsOpener
-Pre-Depends: firmware (>= 5.1)
-Depends: mobilesubstrate, ws.hbang.libopener (>= 3.0)
+Depends: firmware (>= 5.1), mobilesubstrate, ws.hbang.libopener (>= 3.0)
 Version: 1.6
 Architecture: iphoneos-arm
 Description: Open map links in Google Maps
 Maintainer: HASHBANG Productions <support@hbang.ws>
 Author: HASHBANG Productions <support@hbang.ws>
-Section: Tweaks
-Icon: file:///Library/Opener/MapsOpener.bundle/icon@2x.png
-Suport: https://hbang.ws/support/
+Section: Addons
+Icon: file:///Library/PreferenceBundles/MapsOpener.bundle/icon@2x.png
+Depiction: https://cydia.hbang.ws/package/ws.hbang.mapsopener/
+Support: https://hbang.ws/support/
 Sponsor: thebigboss.org <http://thebigboss.org>
 Tag: purpose::extension, compatible::ios5, compatible::ios6, compatible::ios7, compatible::ios8, compatible::ios9, compatible::ios10
 dev: hbang
