@@ -7,7 +7,7 @@ Description: Open map links in Google Maps
 Maintainer: HASHBANG Productions <support@hbang.ws>
 Author: HASHBANG Productions <support@hbang.ws>
 Section: Addons
-Icon: file:///Library/PreferenceBundles/MapsOpener.bundle/icon@2x.png
+Icon: file:///Library/Opener/MapsOpener.bundle/icon@2x.png
 Depiction: https://cydia.hbang.ws/package/ws.hbang.mapsopener/
 Support: https://hbang.ws/support/
 Sponsor: thebigboss.org <http://thebigboss.org>
